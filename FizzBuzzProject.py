@@ -1,5 +1,5 @@
 #James Petullo
-#This is my code for the class FizzBuzz problem
+#This is my code for the classic FizzBuzz problem
 for i in range(1, 101):
     if i%15 == 0:
         print "FizzBuzz"
