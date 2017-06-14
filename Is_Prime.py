@@ -4,13 +4,12 @@ while True:
         print x, "is niether prime nor composite"
 
     elif x > 1:
-        for i in range(2, x):
-            if x%i == 0:
-                print x, "is not prime"
-                break
-            else:
-                print x, "is prime"
-                break
+       
+        if all(x%i !=0 for i in range(2, x)):
+            print x, "is prime"
+            
+        else:
+            print x, "is not prime"
 
     ans = raw_input("do you want to play again?")
     if ans == 'y' or ans == 'Yes' or ans == 'yes':
