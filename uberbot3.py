@@ -1,7 +1,7 @@
 #uberbot 3
 
 def parkingSpot(carDimensions, parkingLot, luckySpot):
-
+     #go inside from outside, not outside from inside (start from lucky square, not sides)
     new_board = map(list, zip(*parkingLot))
     flag1 = all(i == 0 for i in new_board[0][luckySpot[1]:luckySpot[1]+carDimensions[1]]) #front
     flag2 = all(i == 0 for i in new_board[-1][luckySpot[1]:luckySpot[1]+carDimensions[1]]) #back
