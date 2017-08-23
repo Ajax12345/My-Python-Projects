@@ -2,7 +2,7 @@ import urllib
 import re
 import collections
 import itertools
-#TODO: build method to garner sources from wikepdia articles
+#TODO: Clean final article data so that href links are not contained.
 class Wiki:
     def __init__(self):
         #self.query = query
@@ -30,6 +30,17 @@ class Wiki:
         new_stuff = [i for i in new_stuff if i]
         return  ' '.join(new_stuff)
 
+    def get_article_data_between_keywords(self, article_data, *args):
+        combos = list(itertools.combinations(args, 2))
+        for a, b in combos:
+            try:
+                yield article_data[article_data.index(a):article_data.index(b)]
+
+            except ValueError:
+                pass
+
+
+
 
     def get_article_info_by_keyword(self, keyword):
         url = "https://en.wikipedia.org/wiki/{}".format(keyword)
@@ -38,8 +49,12 @@ class Wiki:
         new_data = re.findall("<p>(.*?)</p>", article_data)
         split_data = list(itertools.chain.from_iterable([i.split() for i in new_data]))
         new_stuff = [self.filter_html_and_non_alpha(i) if not all(b.isalpha() for b in i) else i for i in split_data]
-        new_stuff = [i for i in new_stuff if i]
-        return  ' '.join(new_stuff)
+        new_stuff = [i for i in new_stuff if "_" not in i]
+        new_data = ' '.join(new_stuff)
+        #new_data = re.sub("<sup|>", '', new_data)
+        new_data = re.sub("\s\s", '', new_data)
+        return re.sub("<sup|>", '', new_data)
+        #return  ' '.join(new_data)
 
     def get_article_sources(self, article_name, **kwargs):
         url = None
@@ -148,11 +163,10 @@ class Wiki:
 
 
 
-w = Wiki()
+#w = Wiki()
 #print w.get_article_info_by_keyword("python programming")
 #titles = w.disambiguation()
 
 #print [(i.extension1, i.name) for i in titles]
 #w.get_article_sources("/wiki/Python_(programming_language)", full_url= True)
-print w.get_article_info_by_keyword("Newsmax")
-print w.get_article_sources("Newsmax")
+#print w.get_article_info_by_keyword("Newsmax")
