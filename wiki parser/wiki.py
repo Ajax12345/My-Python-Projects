@@ -31,13 +31,9 @@ class Wiki:
         return  ' '.join(new_stuff)
 
     def get_article_data_between_keywords(self, article_data, *args):
-        combos = list(itertools.combinations(args, 2))
-        for a, b in combos:
-            try:
-                yield article_data[article_data.index(a):article_data.index(b)]
-
-            except ValueError:
-                pass
+        for sentence in article_data.split("."):
+            if any(i.lower() in sentence.lower() for i in args):
+                yield sentence
 
 
 
@@ -163,10 +159,16 @@ class Wiki:
 
 
 
-#w = Wiki()
+w = Wiki()
+keywords = ["Newsmax", "company", "revenues"]
+article_data = w.get_article_info_by_keyword("Newsmax")
+for i in w.get_article_data_between_keywords(article_data, *keywords):
+    print i
+    print "------------------------------------------"
 #print w.get_article_info_by_keyword("python programming")
 #titles = w.disambiguation()
 
 #print [(i.extension1, i.name) for i in titles]
 #w.get_article_sources("/wiki/Python_(programming_language)", full_url= True)
 #print w.get_article_info_by_keyword("Newsmax")
+
