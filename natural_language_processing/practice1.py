@@ -15,8 +15,10 @@ class SpeechBot:
         self.adjectives = self.get_adjectives()
         self.verbs = self.get_verbs()
         self.pronouns = self.get_pronouns()
+
         self.adverbs = self.get_adverbs()
         self.personal_pronouns = self.get_personal_pronouns()
+        #print "personal_pronouns", self.personal_pronouns
         self.query_words = ["what", "when", "where", "which", "who", "whom", "whose", "why", "did"]
         self.w = wiki.Wiki()
 
@@ -25,7 +27,7 @@ class SpeechBot:
         self.last_response = raw_input("What is it you have to say? ")
 
     def format_response(self):
-        converter = {"nouns":self.nouns, "adjectives":self.adjectives, "verbs":self.verbs, "pronouns":self.pronouns, "adverbs":self.adverbs}
+        converter = {"nouns":self.nouns, "adjectives":self.adjectives, "verbs":self.verbs, "pronouns":self.pronouns, "adverbs":self.adverbs, "personal_pronouns":self.personal_pronouns}
         word_matching = {a:[i.lower() for i in self.last_response.split() if i.lower() in b] for a, b in converter.items()}
         new_dict = copy.deepcopy(word_matching)
         del new_dict["nouns"]
@@ -34,22 +36,47 @@ class SpeechBot:
 
         final_nouns = list(set(i for i in word_matching["nouns"] if i not in itertools.chain.from_iterable([self.verbs, self.adjectives, self.query_words, self.adverbs, self.personal_pronouns, self.pronouns])))
         word_matching["nouns"] = final_nouns
-        
+        word_matching["personal_pronouns"] = [i for i in self.last_response.split() if i in self.personal_pronouns]
+        word_matching["nouns"] = [i for i in word_matching["nouns"] if i.upper() not in word_matching["personal_pronouns"] or i.lower() not in word_matching["personal_pronouns"]]
+
         self.determine_response(word_matching)
 
     def determine_response(self, tree):
         #later, will have to add feature which checks database for previous user entry
+        print tree
+        #for each, certain keywords will be obtain that will work in each sense. 
+        if tree["querys"] and not tree["personal_pronouns"] and tree["nouns"]:
+            print "check internal files or wiki for answer"
 
+        elif tree["querys"] and any("you" in i for i in tree["personal_pronouns"]):
+            print "asking about computer"
 
-        if tree["nouns"]:
-            articles = [self.w.get_article_info_by_keyword(i) for i in tree["nouns"]]
-            final_snippets = [list(self.w.get_article_data_between_keywords(i, *tree["nouns"])) for i in articles]
-            print final_snippets
+        elif tree["querys"] and "I" in tree["personal_pronouns"]:
+            print "asking about himself"
 
 
         else:
-            pass
-            #check query words
+            if tree["nouns"] and any("you" in i for i in tree["personal_pronouns"]):
+                print "refering to computer"
+
+
+            elif tree["nouns"] and 'I' in tree["personal_pronouns"]:
+                print "refering to speaker"
+
+            elif tree["nouns"] and not tree["personal_pronouns"] and tree["pronouns"]:
+                print "refering to himself"
+
+
+            elif tree["nouns"] and not tree["personal_pronouns"]:
+                print "purely declarative"
+
+            else:
+                print "not sure, tell me"
+
+
+
+
+
 
 
     def get_nouns(self):
@@ -66,10 +93,12 @@ class SpeechBot:
 
     def get_pronouns(self):
         f = [i.strip('\n') for i in open('pronouns.txt')]
+
         new_f = [i for i in f if i and i != "\t" and not i.isupper()]
         new_f.append("I")
         #return new_f
-        return [i for i in new_f if i not in self.get_personal_pronouns()]
+        self.query_words = ["what", "when", "where", "which", "who", "whom", "whose", "why", "did"]
+        return [i for i in new_f if i not in self.query_words]
 
     def get_adverbs(self):
         f = [i.strip('\n') for i in open('adverbs.txt')]
@@ -81,15 +110,6 @@ class SpeechBot:
         f = [i.strip('\n').split() for i in open('ppns.txt')]
         f = [i[-2:] for i in f if i]
         return list(itertools.chain.from_iterable(f))
+s = SpeechBot("what are the yankees")
 
-
-
-
-if __name__ == "__main__":
-    speech = SpeechBot("what is donald trump doing")
-    '''
-    while True:
-        speech.user_string()
-        speech.format_response()
-    '''
-    speech.format_response()
+s.format_response()
