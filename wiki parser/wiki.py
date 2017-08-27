@@ -2,7 +2,8 @@ import urllib
 import re
 import collections
 import itertools
-#TODO: Clean final article data so that href links are not contained.
+
+
 class Wiki:
     def __init__(self):
         #self.query = query
@@ -61,11 +62,13 @@ class Wiki:
             url = "https://en.wikipedia.org/wiki/{}".format(article_name)
 
         data = str(urllib.urlopen(url).read())
+
         s = '<li id="cite_note-(.*?)">(.*?)</li>'
         raw_sources = re.findall(s, data)
         final_dict = collections.defaultdict(dict)
 
         for number, raw_content in raw_sources:
+
             citation_type = re.findall('<cite class="(.*?)">', raw_content)
             final_dict[number]["citation_type"] = citation_type
 
@@ -93,6 +96,7 @@ class Wiki:
             final_dict[number]["retrieved"] = "N/D" if not retrieved else ' '.join(retrieved[0][1:])
 
         return final_dict
+
 
 
 
@@ -145,6 +149,12 @@ class Wiki:
         elif new_word == "<abbr":
             new_word = ''
 
+        elif "<sup" in new_word:
+            new_word = re.sub("<sup", '', new_word)
+
+        elif "<span" in new_word:
+            new_word = re.sub("<span", '', new_word)
+
 
 
         else:
@@ -154,21 +164,59 @@ class Wiki:
 
         return new_word
 
+    def get_bibliography(self, article, **kwargs):
+        url = "https://en.wikipedia.org/wiki/{}".format(article) if not kwargs.get("by_url", False) else "https://en.wikipedia.org{}".format(article)
+
+        page_data = str(urllib.urlopen(url).read())
+        if '<span class="mw-headline" id="Bibliography">Bibliography</span>' not in page_data:
+            return None
+
+        else:
+            new_data = page_data.split("\n")
+            #print [i for i, a in enumerate(page_data.split("\n")) if "Bibliography" in a]
+            final_data = re.findall("<li>(.*?)</li>", '\n'.join(new_data[100:]))
+
+            new_data = [{"full_title":i[:i.index("(<a href")] if "(<a href" in i else i, "ISBN":re.findall('<a href="/wiki/Special:BookSources/(.*?)"', i)[0] if re.findall('<a href="/wiki/Special:BookSources/(.*?)"', i) else "No Exterior ISBN"} for i in final_data]
+            return new_data
+
+
+    def get_external_links(self, article, **kwargs):
+        url = "https://en.wikipedia.org{}".format(article) if kwargs.get("by_url", False) else "https://en.wikipedia.org/wiki/{}".format(article)
+        page_data = str(urllib.urlopen(url).read())
+        if '<span class="mw-headline" id="External_links">External links</span>' not in page_data:
+            return None
+
+        else:
+
+            page_data = page_data.split("\n")
+            indices = [i for i, a in enumerate(page_data) if '<span class="mw-headline" id="External_links">External links</span>' in a]
+            final_data = '\n'.join(page_data[indices[-1]:])
+
+            sites = re.findall('<a rel="nofollow" class="external text" href="(.*?)">(.*?)</a>', final_data)
+
+            site = collections.namedtuple("site", "url name")
+            new_sites = map(site._make, sites)
+            return new_sites
+
+    def get_contents(self, article, **kwargs):
+        url = "https://en.wikipedia.org{}".format(article) if kwargs.get("by_url", False) else "https://en.wikipedia.org/wiki/{}".format(article)
+        page_data = str(urllib.urlopen(url).read())
+        r = '<span class="mw-headline" id="(.*?)">(.*?)</span>'
+        contents = re.findall(r, page_data)
+        return [i[0] for i in contents]
 
 
 
 
 
 w = Wiki()
-keywords = ["Newsmax", "company", "revenues"]
-article_data = w.get_article_info_by_keyword("Newsmax")
-for i in w.get_article_data_between_keywords(article_data, *keywords):
-    print i
-    print "------------------------------------------"
+print w.get_article_info_by_url("/wiki/Shell_Grotto,_Margate")
+#print w.get_bibliography("/wiki/Shell_Grotto,_Margate", by_url = True)
+#site_links = w.get_external_links("/wiki/Shell_Grotto,_Margate", by_url = True)
+
 #print w.get_article_info_by_keyword("python programming")
 #titles = w.disambiguation()
 
 #print [(i.extension1, i.name) for i in titles]
 #w.get_article_sources("/wiki/Python_(programming_language)", full_url= True)
 #print w.get_article_info_by_keyword("Newsmax")
-
