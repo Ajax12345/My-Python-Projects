@@ -4,7 +4,6 @@ import itertools
 def is_valid_board(board):
     queens = [(i, b) for i in range(8) for b in range(8) if board[i][b] != "-"]
     #print queens
-    #BUG: It is including itself when it finds all available moves!
     #return all(all("Q" not in board[c][b] for c, b in move_finder.get_queen_moves(board, i, j)) for i, j in queens)
     #return queens
     new_queens = {queen:[i for i in move_finder.get_queen_moves(board, queen[0], queen[-1]) if i != queen] for queen in queens}
