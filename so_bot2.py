@@ -20,10 +20,14 @@ def post_answer(payload):
 
 def strip_contents(url):
     comments = []
-
+    flag = False
 
     page_data = str(urllib.urlopen("https://stackoverflow.com{}".format(url)).read())
+
     paragraphs = re.findall("<p>(.*?)</p>", page_data)[:-3]
+    print "paragraphs", paragraphs
+    if "<code>" not in page_data:
+        flag = True
     #print paragraphs
     #print paragraphs
     keywords = [i for i, a in enumerate(url) if a == "/"]
@@ -75,73 +79,80 @@ def strip_contents(url):
     best_answers = [i for i in finall_answers if id_and_url[i] != question_name]
 
     new_data = []
+    if not best_answers:
+        if flag:
+            post_commments(url, paragraphs)
+
 
     #for i in best_answers[:4]:
     for i in best_answers:
 
 
         new_url = "https://stackoverflow.com/questions/{}/{}".format(i, id_and_url[i])
-            #print new_url
+        print "new_url", new_url
 
         data = str(urllib.urlopen(new_url).read())
-        if re.findall('class="answer accepted-answer"', data):
-            code_object = soup(data, "lxml")
-            accepted_answer = code_object.findAll("div", {"class":"answer accepted-answer"})
+        tags = re.findall('rel="tag">(.*?)</a>', data)
+        print "tags", tags
+        if any(i in tags for i in ['python', 'python-2.7', 'python-3.6']):
+            if re.findall('class="answer accepted-answer"', data):
 
-            accepted_code = '\n'.join(map(str, accepted_answer))
+                code_object = soup(data, "lxml")
+                accepted_answer = code_object.findAll("div", {"class":"answer accepted-answer"})
 
-            code_block = soup(accepted_code, "lxml").findAll("code")
-            code_block = [i.text for i in code_block]
-            try:
+                accepted_code = '\n'.join(map(str, accepted_answer))
 
-                final_code = '\n'.join(map(str, code_block))
-            except:
-                pass
+                code_block = soup(accepted_code, "lxml").findAll("code")
+                explaination = soup(accepted_code, "lxml").findAll("p")
+                code_block = [i.text for i in code_block]
+                try:
+
+                    final_code = '\n'.join(map(str, code_block))
+                except:
+                    pass
+                else:
+                    if re.findall("\w+", final_code):
+                        print "here1"
+                        new_data.append(final_code)
             else:
-                if re.findall("\w+", final_code):
-                    print "here1"
-                    new_data.append(final_code)
-        else:
-            code_object = soup(data, "lxml")
-            accepted_answer = code_object.findAll("div", {"class":"answer"})
-            '''
-            new_accepted_anser = [i.text for i in accepted_answer]
-            accepted_code = '\n'.join(new_accepted_anser)
-            if re.findall("\w+", accepted_code):
-                print "here2"
-                new_data.append(accepted_code)
-            '''
-            accepted_code = '\n'.join(map(str, accepted_answer))
+                code_object = soup(data, "lxml")
+                accepted_answer = code_object.findAll("div", {"class":"answer"})
 
-            code_block = soup(accepted_code, "lxml").findAll("code")
-            code_block = [i.text for i in code_block]
-            try:
-                final_code = '\n'.join(map(str, code_block))
-            except:
-                pass
-            else:
-                if re.findall("\w+", final_code):
-                    print "here2"
-                    new_data.append(final_code)
+                accepted_code = '\n'.join(map(str, accepted_answer))
+
+                code_block = soup(accepted_code, "lxml").findAll("code")
+                code_block = [i.text for i in code_block]
+                try:
+                    final_code = '\n'.join(map(str, code_block))
+                except:
+                    pass
+                else:
+                    if re.findall("\w+", final_code):
+                        print "here2"
+                        new_data.append(final_code)
                 #print '\n'.join(code_block)
                 #code = [soup(i, "lxml").findAll("pre", {"class":"lang-py prettyprint prettyprinted"}) for i in accepted_answer]
 
 
     if new_data:
+        print "new_data", new_data
+        print "new_url", new_url
         print "You can try this:"
-        print "final_code", new_data[0]
+        print "final_code", ''.join(new_data)
 
 
 
-
-            #pass
-
+last_seen = []
 while True:
     #TODO: if title is longer than a certain number of characters, shorten
     #TODO: If no code is found in qestion, search for questions ([a-zA-Z]+\?)
+    #IDEA: code from one answer, text from another
+    #IDEA: scan answer and question text to see specifically what user is asking for
+    #IDEA: potential answer "Here is an example based on what you want to accomplish. "
 
     link, title = get_question_list()
-    print title
-    strip_contents(link)
-    time.sleep(60)
+    if link not in last_seen:
+        strip_contents(link)
+        last_seen.append(link)
+
     print "---------------------------"
