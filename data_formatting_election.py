@@ -55,9 +55,9 @@ for a in StateData._states:
     print([a, StateData._csv_state_ids[a], margins[a]['Trump'], margins[a]['Hillary Clinton'], number_3[a]])
 '''
 #print([[a, b, _nationwide[a], margins[a]['Trump'], margins[a]['Clinton'], number_3[a]] for a, b in StateData._csv_state_ids.items()])
-'''
-with open('final_data_listing.csv', 'w') as f:
-    write = csv.writer(f)
-    write.writerows([['state', 'id', 'Trump_margin', 'Clinton_margin', 'County'], *[[a, StateData._csv_state_ids[a], margins[a]['Trump'], margins[a]['Hillary Clinton'], number_3[a]] for a in StateData._states]])
+if __name__ == '__main__':
+    with open('final_data_listing.csv', 'w') as f:
+        write = csv.writer(f)
+        write.writerows([['state', 'id', 'Trump_margin', 'Clinton_margin', 'County'], *[[a, StateData._csv_state_ids[a], margins[a]['Trump'], margins[a]['Hillary Clinton'], number_3[a]] for a in StateData._states]])
 
-'''
+
