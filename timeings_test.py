@@ -32,26 +32,36 @@ def OP():
         else:
             print("Subarray found:", current_subarray)
 
-'''
+
 @timeit
 def roadrunner():
     from scipy.stats import rankdata
-
     A = [1, 5, 2, 4, 3]
     B = [0, 2, 1]
-
     m = len(A)
     n = len(B)
-
     for i in range(m - n + 1):
         current_subarray = A[i:i + n]
-
         ranked_numbers = (rankdata(current_subarray).astype(int) - 1).tolist()
         if ranked_numbers == B:
             print("Subarray found:", current_subarray)
 
-'''
 
+
+
+@timeit
+def pault():
+    import numpy as np
+    A = [1, 5, 2, 4, 3]
+    B = [0, 2, 1]
+    b = np.array(
+        [[int(i==B[j]) for j in range(len(B))] for i in range(len(B))]
+    )
+    print(b)
+    for i in range(0, (len(A) - len(B))+1):
+        a = np.array(A[i:i+len(B)])
+        if (np.diff(a.dot(b))>=0).all():
+            print(a)
 #ajax1234()
 #roadrunner()
 #OP()
